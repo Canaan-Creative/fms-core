@@ -31,7 +31,7 @@ def upgrade_firmware(ip: str, port: int, firmware_file_path: str, timeout: int =
     aup_file_payload = aup_file.file_content_binary()
     version = aup_file.header().firmware_ver()
 
-    asyncio.run(aio_mm3_upgrade(
+    return asyncio.run(aio_mm3_upgrade(
         ip,
         port=port,
         api_version=0,

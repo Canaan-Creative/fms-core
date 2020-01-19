@@ -31,17 +31,22 @@ import logging
 # fmsc imports
 import fmsc
 from fmsc import upgrade
+import fmsc.utils as uf
+
 
 
 _logger = logging.getLogger(__file__)
 
 
 def upgrade_miner(args):
+    from fmsc.aioupgrade import UpgradeResults
+    success: bool = False
+    upgrade_result: UpgradeResults = UpgradeResults.unexpected_error
     try:
-        upgrade.upgrade_firmware(args.ip, args.port, args.file, timeout=args.timeout)
+        success, upgrade_result = upgrade.upgrade_firmware(args.ip, args.port, args.file, timeout=args.timeout)
     finally:
-        result_msg = f"upgrade {args.ip}:{args.port} firmware to {args.file} finish"
-        print(result_msg)
+        print(f"upgrade {args.ip}:{args.port} firmware to {args.file} finish: "
+              f"{'success' if success else 'failed'} with {upgrade_result}")
 
 
 def main():  # type: () -> None
