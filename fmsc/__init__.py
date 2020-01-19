@@ -19,4 +19,4 @@ See https://github.com/Canaan-Creative/fms-core for more information
 """
 
 # Version of fmsc package
-__version__ = "0.0.1"
+__version__ = "0.0.2"
