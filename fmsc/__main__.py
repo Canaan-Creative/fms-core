@@ -16,11 +16,7 @@
 """Query or control Avalon miners
 Usage:
 ------
-    $ fmsc [sub command] [options] [parameters ...]
-Upgrade firmware:
-    $ fmsc upgrade <ip> [port: default 4028]
-Available options are:
-    -h, --help         Show this help
+    $ fmsc -h
 More information is available at:
 - https://github.com/Canaan-Creative/fms-core
 Version:
@@ -30,33 +26,56 @@ Version:
 # Standard library imports
 import sys
 import argparse
+import logging
 
 # fmsc imports
 import fmsc
 from fmsc import upgrade
 
 
+_logger = logging.getLogger(__file__)
+
+
 def upgrade_miner(args):
-    print(f"args.ip {args.ip}, args.port {args.port}, args.file {args.file}")
+    try:
+        upgrade.upgrade_firmware(args.ip, args.port, args.file, timeout=args.timeout)
+    finally:
+        result_msg = f"upgrade {args.ip}:{args.port} firmware to {args.file} finish"
+        print(result_msg)
 
 
 def main():  # type: () -> None
     """Query or control Avalon miners"""
     parser = argparse.ArgumentParser(prog=fmsc.__name__, description='Query or control Avalon miners.')
+    parser.add_argument('--log', type=str, choices=['debug', 'info', 'error'], default='info',
+                        help='logging level, default is %(default)s')
     subparsers = parser.add_subparsers(
         title='subcommands',
         description='valid subcommands',
         help='sub commands list')
-    upgrade_parser = subparsers.add_parser('upgrade', help='upgrade firmware for one Avalon miner')
-    upgrade_parser.add_argument('--ip', '-I', type=str, help='Avalon miner IP address, such as 192.168.1.123')
-    upgrade_parser.add_argument('--port', '-P', type=int, default=4028, help='Avalon miner API port, default is %(default)s')
-    upgrade_parser.add_argument('--file', '-F', type=str, help='Avalon miner firmware file path')
+    upgrade_parser = subparsers.add_parser('upgrade',
+                                           help='upgrade firmware for one Avalon miner')
+    upgrade_parser.add_argument('--ip', '-I', type=str,
+                                help='Avalon miner IP address, such as 192.168.1.123')
+    upgrade_parser.add_argument('--port', '-P', type=int, default=4028,
+                                help='Avalon miner API port, default is %(default)s')
+    upgrade_parser.add_argument('--file', '-F', type=str,
+                                help='Avalon miner firmware file path')
+    upgrade_parser.add_argument('--timeout', '-T', type=int, default=12*60,
+                                help="Upgrade timeout. It's unit is seconds. default is %(default)s")
     upgrade_parser.set_defaults(func=upgrade_miner)
 
     args = parser.parse_args() if len(sys.argv) > 1 else parser.parse_args(['-h'])
+
+    logging_level = logging.DEBUG if args.log == 'debug' else (logging.ERROR if args.log == 'error' else logging.INFO)
+    logging.basicConfig(level=logging_level)
+
     if hasattr(args, 'func'):
         args.func(args)
 
 
 if __name__ == "__main__":
-    main()
+    try:
+        main()
+    except Exception as e:
+        _logger.exception(f"{fmsc.__name__} main uncaught exception")

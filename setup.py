@@ -40,7 +40,7 @@ setup(
                 'needed to communicate with and control Avalon miners.',
     long_description=README,
     long_description_content_type="text/markdown",
-    install_requires=[],
+    install_requires=['kaitaistruct'],
     include_package_data=True,
     entry_points={
         "console_scripts": [
