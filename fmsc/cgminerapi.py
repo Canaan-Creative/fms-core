@@ -597,7 +597,7 @@ async def wait_cancelable(coro_task, timeout, cancel_task):
             raise asyncio.TimeoutError()
     except asyncio.CancelledError:
         coro_task.cancel()
-        print(f"wait_cancelable cancel exception {traceback.format_exc()}")
+        _logger.debug(f"wait_cancelable cancel exception {traceback.format_exc()}")
         raise
 
 
