@@ -125,10 +125,16 @@ class CGMinerAPIResult(object):
             except Exception as e:
                 sidx = 0
                 eidx = 100
+                peek_len = 50
                 matched = re.compile(r'.*\(\s*char\s+(\d+)\s*-\s*(\d+)\s*\).*').match(str(e))
                 if matched:
-                    sidx = min(max(uf.str2int(matched.group(1)), 0), len(unicode_response))
-                    eidx = min(max(uf.str2int(matched.group(2)), sidx), len(unicode_response))
+                    sidx = min(max(uf.str2int(matched.group(1)) - peek_len, 0), len(unicode_response))
+                    eidx = min(max(uf.str2int(matched.group(2)) + peek_len, sidx), len(unicode_response))
+                else:
+                    matched = re.compile(r'.*\(\s*char\s+(\d+).*').match(str(e))
+                    if matched:
+                        sidx = min(max(uf.str2int(matched.group(1)) - peek_len, 0), len(unicode_response))
+                        eidx = min(sidx + 2*peek_len, len(unicode_response))
                 _logger.exception(f"load api response failed. {sidx}:{eidx} <<<{unicode_response[sidx:eidx]}>>>")
         if self._response_dict is None:
             self._response_dict = {}
