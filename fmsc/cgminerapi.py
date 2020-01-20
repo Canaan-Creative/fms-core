@@ -16,18 +16,17 @@
 # -*- coding:utf-8 -*-
 
 import asyncio
-import re
+import errno
 import json
+import logging
+import re
 import socket
 import time
-import errno
 import traceback
-import logging
-
 import typing
+from enum import Enum, IntEnum
 
 from . import utils as uf
-from enum import Enum, IntEnum
 
 _logger = logging.getLogger(__file__)
 
@@ -767,7 +766,6 @@ class CGMinerAPI(object):
     @staticmethod
     def _prepare_upgrade_param(api_version, file_size, ip, offset, payload, payload_len, uid, version):
         import random
-        import time
         payload_dict = {}
         endianness = 'little'
         param = bytearray()

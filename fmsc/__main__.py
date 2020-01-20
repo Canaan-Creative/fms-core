@@ -23,15 +23,14 @@ Version:
 --------
 - fmsc v0.0.1
 """
-# Standard library imports
-import sys
 import argparse
 import logging
+# Standard library imports
+import sys
 
 # fmsc imports
 import fmsc
 from fmsc import upgrade
-import fmsc.utils as uf
 
 _logger = logging.getLogger(__file__)
 
