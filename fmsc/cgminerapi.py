@@ -33,7 +33,7 @@ _logger = logging.getLogger(__file__)
 ERR_CODE_cancelled = 99999
 kDefaultPort = 4028
 
-supress_led_command_log = False
+suppress_led_command_log = False
 
 
 class CGMinerStatus(Enum):
@@ -50,6 +50,7 @@ class CGMinerStatusCode(IntEnum):
     AscsetErr = 120
 
 
+# noinspection SpellCheckingInspection
 class UpgradeErrCode(IntEnum):
     UPGRADE_ERR_APIVER = 1
     UPGRADE_ERR_HEADER = 2
@@ -121,19 +122,20 @@ class CGMinerAPIResult(object):
             try:
                 self._response_dict = json.loads(unicode_response, strict=False)
             except Exception as e:
-                sidx = 0
-                eidx = 100
+                start_idx = 0
+                end_idx = 100
                 peek_len = 50
                 matched = re.compile(r'.*\(\s*char\s+(\d+)\s*-\s*(\d+)\s*\).*').match(str(e))
                 if matched:
-                    sidx = min(max(uf.str2int(matched.group(1)) - peek_len, 0), len(unicode_response))
-                    eidx = min(max(uf.str2int(matched.group(2)) + peek_len, sidx), len(unicode_response))
+                    start_idx = min(max(uf.str2int(matched.group(1)) - peek_len, 0), len(unicode_response))
+                    end_idx = min(max(uf.str2int(matched.group(2)) + peek_len, start_idx), len(unicode_response))
                 else:
                     matched = re.compile(r'.*\(\s*char\s+(\d+).*').match(str(e))
                     if matched:
-                        sidx = min(max(uf.str2int(matched.group(1)) - peek_len, 0), len(unicode_response))
-                        eidx = min(sidx + 2 * peek_len, len(unicode_response))
-                _logger.exception(f"load api response failed. {sidx}:{eidx} <<<{unicode_response[sidx:eidx]}>>>")
+                        start_idx = min(max(uf.str2int(matched.group(1)) - peek_len, 0), len(unicode_response))
+                        end_idx = min(start_idx + 2 * peek_len, len(unicode_response))
+                _logger.exception(f"load api response failed. "
+                                  f"{start_idx}:{end_idx} <<<{unicode_response[start_idx:end_idx]}>>>")
         if self._response_dict is None:
             self._response_dict = {}
         return self._response_dict
@@ -207,9 +209,6 @@ class CGMinerAPIResult(object):
         # [{"Silent":true,"Quiet":false,"Verbose":false,"Debug":false,"RPCProto":false,"PerDevice":false,"WorkTime":false}]
         return self.success_response_dict("DEBUG")
 
-    def minerupgrade(self):
-        return self.success_response_dict("MINERUPGRADE")
-
     def version(self):
         return self.success_response_dict("VERSION")
 
@@ -217,6 +216,7 @@ class CGMinerAPIResult(object):
         version_list = self.version()
         if version_list is not None and len(version_list) > 0:
             if 'VERSION' not in version_list[0]:
+                # noinspection SpellCheckingInspection
                 return version_list[0].get('VERION')  # firmware has a typo at 2019.5.17
             return version_list[0].get('VERSION')
 
@@ -283,7 +283,7 @@ def request_cgminer_api_by_sock(
     buffer_list = bytearray()
     err_msgs = []
     success = False
-    scantime = time.time()
+    scan_time = time.time()
     unlimited_retry_count = 0
     api_request_id = uf.random_str_only_with_alnum()
     while not success and not total_timeout_err and try_times <= retry + unlimited_retry_count:
@@ -292,7 +292,7 @@ def request_cgminer_api_by_sock(
             err_msgs.append("total timeout")
             break
         start_time = time.time()
-        if not supress_led_command_log or parameters.find(',led,') < 0:
+        if not suppress_led_command_log or parameters.find(',led,') < 0:
             _logger.debug("[%s] [%s] [ip %s port %s] start command %s with parameter %s" % (
                 api_request_id, uf.now_exact_str(), ip, port, command, parameters[:60]))
         sock = None
@@ -307,7 +307,7 @@ def request_cgminer_api_by_sock(
                 total_timeout_err = True
                 raise RuntimeError("total timeout")
             connect_success = True
-            scantime = time.time()
+            scan_time = time.time()
             if use_json_command:
                 cmd_json = json.dumps({"command": command, "parameter": parameters})
             else:
@@ -357,7 +357,7 @@ def request_cgminer_api_by_sock(
             if sock:
                 sock.close()
             dt = time.time() - start_time
-            if not supress_led_command_log or parameters.find(',led,') < 0:
+            if not suppress_led_command_log or parameters.find(',led,') < 0:
                 _logger.debug(
                     f"[{api_request_id}] [ip {ip} port {port}] "
                     f"end command {command} with parameter {parameters[:60]}. dt: {dt}")
@@ -387,7 +387,7 @@ def request_cgminer_api_by_sock(
             f"command {command} with parameter {parameters[:60]}."
             f" dt: {delta_total_time}. "
             f"err: {err_msgs[-1][:100] if err_msgs else 'no err msg'}")
-    return CGMinerAPIResult(success, scantime, response, try_times, "\n".join(err_msgs))
+    return CGMinerAPIResult(success, scan_time, response, try_times, "\n".join(err_msgs))
 
 
 async def aio_request_cgminer_api_by_sock(
@@ -427,7 +427,7 @@ async def aio_request_cgminer_api_by_sock(
     buffer_list = bytearray()
     err_msgs = []
     success = False
-    scantime = time.time()
+    scan_time = time.time()
     unlimited_retry_count = 0
     api_request_id = uf.random_str_only_with_alnum()
     cancel_task = asyncio.create_task(cancel_event.wait()) if cancel_event is not None else None
@@ -438,7 +438,7 @@ async def aio_request_cgminer_api_by_sock(
             err_msgs.append("total timeout")
             break
         start_time = time.time()
-        if not supress_led_command_log or parameters.find(',led,') < 0:
+        if not suppress_led_command_log or parameters.find(',led,') < 0:
             _logger.debug("[%s] [%s] [ip %s port %s] start command %s with parameter %s" % (
                 api_request_id, uf.now_exact_str(), ip, port, command, parameters[:60]))
         timeout = float(try_times + first_timeout)  # seconds
@@ -455,7 +455,7 @@ async def aio_request_cgminer_api_by_sock(
                 cancel_task=cancel_task)
             _logger.info(f"after conn {ip}")
             connect_success = True
-            scantime = time.time()
+            scan_time = time.time()
             if use_json_command:
                 cmd_json = json.dumps({"command": command, "parameter": parameters})
             else:
@@ -525,7 +525,7 @@ async def aio_request_cgminer_api_by_sock(
         finally:
             _logger.info(f"final conn {ip}")
             dt = time.time() - start_time
-            if not supress_led_command_log or parameters.find(',led,') < 0:
+            if not suppress_led_command_log or parameters.find(',led,') < 0:
                 _logger.debug(f"[{api_request_id}] [{uf.now_exact_str()}] "
                               f"[ip {ip} port {port}] end command {command} with parameter {parameters[:60]}."
                               f" dt: {dt} error_info:{err_msgs[-1] if len(err_msgs) > 0 else ''}")
@@ -581,26 +581,26 @@ async def aio_request_cgminer_api_by_sock(
     if cancel_task is not None and not cancel_task.done():
         cancel_task.cancel()
         await cancel_task
-    return CGMinerAPIResult(success, scantime, response, try_times, "\n".join(err_msgs))
+    return CGMinerAPIResult(success, scan_time, response, try_times, "\n".join(err_msgs))
 
 
-async def wait_cancelable(coro_task, timeout, cancel_task):
+async def wait_cancelable(coroutine_task, timeout, cancel_task):
     try:
         done_tasks, pending_tasks = await asyncio.wait(
-            {coro_task, cancel_task} if cancel_task is not None else {coro_task},
+            {coroutine_task, cancel_task} if cancel_task is not None else {coroutine_task},
             timeout=timeout, return_when=asyncio.FIRST_COMPLETED)
         if cancel_task is not None and cancel_task in done_tasks:
-            coro_task.cancel()
-            await coro_task
+            coroutine_task.cancel()
+            await coroutine_task
             raise asyncio.CancelledError()
-        elif coro_task in done_tasks:
-            return coro_task.result()
+        elif coroutine_task in done_tasks:
+            return coroutine_task.result()
         else:  # len(cancel_task) == 0
-            coro_task.cancel()
-            # await coro_task  # here we should NOT wait, because we should raise timeout, rather than cancelled
+            coroutine_task.cancel()
+            # await coroutine_task  # here we should NOT wait, because we should raise timeout, rather than cancelled
             raise asyncio.TimeoutError()
     except asyncio.CancelledError:
-        coro_task.cancel()
+        coroutine_task.cancel()
         _logger.debug(f"wait_cancelable cancel exception {traceback.format_exc()}")
         raise
 
@@ -677,7 +677,6 @@ class CGMinerAPI(object):
 
     @staticmethod
     def turn_led(ip, dev_id, mod_id, turn_on, port=kDefaultPort, first_timeout=default_first_timeout, retry=0):
-        # search 'strcasecmp(option, "led")' at cgminer driver
         return request_cgminer_api_by_sock(
             ip, "ascset", "%s,led,%s-%s" % (dev_id, mod_id, 1 if turn_on else 0),
             port, first_timeout, retry)
@@ -694,7 +693,6 @@ class CGMinerAPI(object):
 
     @staticmethod
     def toggle_debug(ip, port=kDefaultPort, first_timeout=default_first_timeout, retry=0):
-        # ref cgminer api.c , search 'static void debugstate(' to go to debugstate function
         return request_cgminer_api_by_sock(ip, "debug", "d", port, first_timeout, retry)
 
     @staticmethod
@@ -727,10 +725,11 @@ class CGMinerAPI(object):
             ip, "ascset", "0,reboot,%s" % last_when, port, first_timeout, retry, error_info=error_info)
 
     @staticmethod
-    def mm3_set_workmode(
-            ip, workmode, port=kDefaultPort, first_timeout=default_first_timeout, retry=0, error_info=None):
+    def mm3_set_work_mode(
+            ip, work_mode, port=kDefaultPort, first_timeout=default_first_timeout, retry=0, error_info=None):
+        # noinspection SpellCheckingInspection
         return request_cgminer_api_by_sock(
-            ip, "ascset", "0,workmode,%s" % workmode, port, first_timeout, retry, error_info=error_info)
+            ip, "ascset", "0,workmode,%s" % work_mode, port, first_timeout, retry, error_info=error_info)
 
     @staticmethod
     def version(ip, port=kDefaultPort, first_timeout=default_first_timeout, retry=0, error_info=None):

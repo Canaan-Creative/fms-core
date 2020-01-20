@@ -52,8 +52,8 @@ def main():  # type: () -> None
     parser.add_argument('--log', type=str, choices=['debug', 'info', 'error'], default='info',
                         help='logging level, default is %(default)s')
     subparsers = parser.add_subparsers(
-        title='subcommands',
-        description='valid subcommands',
+        title='sub commands',
+        description='valid sub commands',
         help='sub commands list')
     upgrade_parser = subparsers.add_parser('upgrade',
                                            help='upgrade firmware for one Avalon miner')

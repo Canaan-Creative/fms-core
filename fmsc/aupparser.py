@@ -94,9 +94,9 @@ class Aup0(KaitaiStruct):
         self.payload_crc = self._io.read_u4le()
 
 
-class CommaSeperatedStrList(KaitaiStruct):
+class CommaSeparatedStrList(KaitaiStruct):
     def __init__(self, _io, _parent=None, _root=None):
-        super(CommaSeperatedStrList, self).__init__(_io)
+        super(CommaSeparatedStrList, self).__init__(_io)
         self._parent = _parent
         self._root = _root if _root else self
         self._read()

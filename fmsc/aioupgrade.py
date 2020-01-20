@@ -126,33 +126,33 @@ async def aio_mm3_upgrade(
         max_get_ver_seconds = 5*60
         if progress_report_fxn:
             progress_report_fxn(0, UpgradeStatus.PreCheckVer)
-        precheck_tuple = await aio_mm3_upgrade_precheck(
+        pre_check_tuple = await aio_mm3_upgrade_pre_check(
             enable_pre_ver_check, ip, port,
             version, max_get_ver_seconds,
             supported_hwtype_list, supported_swtype_list)
-        pre_check_err, pre_check_result, prev_ver, prev_when, upapi_ver = precheck_tuple
+        pre_check_err, pre_check_result, prev_ver, prev_when, upgrade_api_ver = pre_check_tuple
         if pre_check_result is not None:
             upgrade_result = pre_check_err
             return pre_check_result, upgrade_result
         if api_version <= 0:
-            api_version = upapi_ver
+            api_version = upgrade_api_ver
         if api_version < 2:
             payload = payload[aup_file.header().total_len() if aup_file.header().is_legal() else 92:]
         else:
             payload = _hack_aup_header_when_cross_aup_header_ver_upgrade(payload, aup_file, prev_ver)
 
-        # distribute payload/fireware
+        # distribute payload/firmware
         file_size = len(payload)
         reboot_progress_ratio = 0.1
-        precheck_progress_ratio = (1 - reboot_progress_ratio) * page_len / file_size
-        upgrade_progress_ratio = 1 - precheck_progress_ratio - reboot_progress_ratio
+        pre_check_progress_ratio = (1 - reboot_progress_ratio) * page_len / file_size
+        upgrade_progress_ratio = 1 - pre_check_progress_ratio - reboot_progress_ratio
         offset = 0
         start_time = time.time()
         uid = int(start_time)
         timeout_error = False
         payload_len = 0
         if progress_report_fxn:
-            progress_report_fxn(precheck_progress_ratio, UpgradeStatus.TransferFirmware)
+            progress_report_fxn(pre_check_progress_ratio, UpgradeStatus.TransferFirmware)
         while offset < file_size:
             success = False
             repeat_times_for_same_offset = 0
@@ -221,7 +221,7 @@ async def aio_mm3_upgrade(
                     uid = int(time.time())
                     _logger.info(f"{ip}:{port} uid changed from {old_uid} to {uid}")
             if progress_report_fxn:
-                progress_report_fxn(precheck_progress_ratio + upgrade_progress_ratio * offset / file_size,
+                progress_report_fxn(pre_check_progress_ratio + upgrade_progress_ratio * offset / file_size,
                                     UpgradeStatus.TransferFirmware)
             if time.time() > start_time + timeout:
                 timeout_error = True
@@ -229,13 +229,13 @@ async def aio_mm3_upgrade(
         _logger.info(f"upgrade finish ip: {ip}:{port} ds: {time.time() - start_time:6.1f}")
         if not timeout_error:
             if progress_report_fxn:
-                progress_report_fxn(precheck_progress_ratio + upgrade_progress_ratio, UpgradeStatus.Reboot)
+                progress_report_fxn(pre_check_progress_ratio + upgrade_progress_ratio, UpgradeStatus.Reboot)
             _logger.info(f"begin reboot ip: {ip}:{port} ds: {time.time() - start_time:6.1f}")
             start_ts = time.time()
             max_allowed_when_reboot_seconds = 5 * 60
             max_allowed_zero_reboot_seconds = 1 * 60
             max_allowed_reboot_seconds = max_allowed_when_reboot_seconds + max_allowed_zero_reboot_seconds
-            new_ver, new_when, upapi_ver = None, None, 1
+            new_ver, new_when, upgrade_api_ver = None, None, 1
             reboot_when = max(prev_when, 15)
             reboot_success = False
             max_get_ver_seconds_after_reboot = max_get_ver_seconds
@@ -254,12 +254,12 @@ async def aio_mm3_upgrade(
                             and not reboot_result.result):
                         latest_err_info = error_info[-1]
                         if latest_err_info.get('timeout') and latest_err_info.get('connect_success'):
-                            _logger.debug("timeout is acceptable for MM3 fireware right now")
+                            _logger.debug("timeout is acceptable for MM3 firmware right now")
                             # if reboot with 0, it always timeout
-                            # and we should wait for enough time before it become responsable
-                            # however, we still verify that when bacome less than prev when
+                            # and we should wait for enough time before it become responsible
+                            # however, we still verify that when become less than prev when
                             max_allowed_restart_seconds = 3*60
-                            _, tmp_when, _, _, _ = await _aio_get_ver_when_and_upapi(
+                            _, tmp_when, _, _, _ = await _aio_get_ver_when_and_upgrade_api(
                                 ip, max_allowed_restart_seconds, port)
                             if tmp_when and tmp_when < prev_when + (time.time() - ts_before_start_reboot):
                                 max_get_ver_seconds_after_reboot = 60
@@ -278,7 +278,7 @@ async def aio_mm3_upgrade(
                     break
                 _logger.info(f"reboot {ip}:{port} result: {reboot_result.debug_str() if reboot_result else None}")
                 if progress_report_fxn:
-                    progress_report_fxn(precheck_progress_ratio + upgrade_progress_ratio, UpgradeStatus.Reboot)
+                    progress_report_fxn(pre_check_progress_ratio + upgrade_progress_ratio, UpgradeStatus.Reboot)
                 await asyncio.sleep(0.3)
                 if time.time() > start_ts + max_allowed_reboot_seconds:
                     _logger.info("%s:%s reboot timeout from %s to %s" % (ip, port, start_ts, time.time()))
@@ -293,8 +293,8 @@ async def aio_mm3_upgrade(
                 return False, upgrade_result
             if reboot_success:
                 if progress_report_fxn:
-                    progress_report_fxn(precheck_progress_ratio + upgrade_progress_ratio, UpgradeStatus.PostCheckVer)
-                new_ver, new_when, upapi_ver, _, _ = await _aio_get_ver_when_and_upapi(
+                    progress_report_fxn(pre_check_progress_ratio + upgrade_progress_ratio, UpgradeStatus.PostCheckVer)
+                new_ver, new_when, upgrade_api_ver, _, _ = await _aio_get_ver_when_and_upgrade_api(
                     ip, max_get_ver_seconds_after_reboot, port)
             if new_ver and new_ver.startswith(version) and new_when and new_when < prev_when:
                 _logger.debug(
@@ -326,14 +326,15 @@ async def aio_mm3_upgrade(
             progress_report_fxn(upgrade_result, UpgradeStatus.Finish)
 
 
-async def aio_mm3_upgrade_precheck(enable_pre_ver_check, ip, port,
-                                   target_version, max_get_ver_seconds,
-                                   supported_hwtype_list,
-                                   supported_swtype_list):
+async def aio_mm3_upgrade_pre_check(enable_pre_ver_check, ip, port,
+                                    target_version, max_get_ver_seconds,
+                                    supported_hwtype_list,
+                                    supported_swtype_list):
     pre_check_result = None
     pre_check_err = None
     # get current version and when first
-    prev_ver, prev_when, upapi_ver, hwtype, swtype = await _aio_get_ver_when_and_upapi(ip, max_get_ver_seconds, port)
+    prev_ver, prev_when, upgrade_api_ver, hwtype, swtype = \
+        await _aio_get_ver_when_and_upgrade_api(ip, max_get_ver_seconds, port)
     if prev_ver is None or len(prev_ver) == 0:
         if enable_pre_ver_check:
             pre_check_result = False
@@ -354,16 +355,16 @@ async def aio_mm3_upgrade_precheck(enable_pre_ver_check, ip, port,
             prev_ver, swtype, target_version, supported_swtype_list))
         pre_check_result = False
         pre_check_err = UpgradeResults.mismatch_swtype
-    return pre_check_err, pre_check_result, prev_ver, prev_when, upapi_ver
+    return pre_check_err, pre_check_result, prev_ver, prev_when, upgrade_api_ver
 
 
-async def _aio_get_ver_when_and_upapi(ip, max_get_ver_seconds, port):
+async def _aio_get_ver_when_and_upgrade_api(ip, max_get_ver_seconds, port):
     timeout_error = False
     import time
     start_ts = time.time()
     prev_ver = None
     prev_when = None
-    prev_upapi_ver = 1
+    prev_upgrade_api_ver = 1
     hwtype = None
     swtype = None
     while True:
@@ -375,7 +376,7 @@ async def _aio_get_ver_when_and_upapi(ip, max_get_ver_seconds, port):
             if ver_result.is_request_success():
                 prev_ver = ver_result.mm3_software_version()
                 prev_when = uf.str2int(ver_result.when(), default=60)
-                prev_upapi_ver = ver_result.mm3_upgrade_api_version()
+                prev_upgrade_api_ver = ver_result.mm3_upgrade_api_version()
                 hwtype = ver_result.mm3_hardware_type()
                 swtype = ver_result.mm3_software_type()
                 break
@@ -385,7 +386,7 @@ async def _aio_get_ver_when_and_upapi(ip, max_get_ver_seconds, port):
             break
     if timeout_error:
         _logger.error("ip: %s:%s failed for getting version timeout" % (ip, port))
-    return prev_ver, prev_when, prev_upapi_ver, hwtype, swtype
+    return prev_ver, prev_when, prev_upgrade_api_ver, hwtype, swtype
 
 
 def _hack_aup_header_when_cross_aup_header_ver_upgrade(payload, aup_file, running_ver):

@@ -84,6 +84,7 @@ class AUPHeaderInfo(object):
             _logger.exception(self.err_message())
 
     def _hack_supported_hwtype_list(self, target_ver):
+        # noinspection SpellCheckingInspection
         if target_ver in (
                 '19092001_01ce5cf_789e6f2',
                 '19101401_956c147_08bcf10',

@@ -40,20 +40,21 @@ def has_any_none_in_iterable(iterable_v):
 
 
 def long_to_bytes(val, expect_byte_count=None, endianness='big'):
+    # noinspection SpellCheckingInspection
     """
-    Use :ref:`string formatting` and :func:`~binascii.unhexlify` to
-    convert ``val``, a :func:`long`, to a byte :func:`str`.
+        Use :ref:`string formatting` and :func:`~binascii.unhexlify` to
+        convert ``val``, a :func:`long`, to a byte :func:`str`.
 
-    :param expect_byte_count:
-    :param long val: The value to pack
+        :param expect_byte_count:
+        :param long val: The value to pack
 
-    :param str endianness: The endianness of the result. ``'big'`` for
-      big-endian, ``'little'`` for little-endian.
+        :param str endianness: The endianness of the result. ``'big'`` for
+          big-endian, ``'little'`` for little-endian.
 
-    If you want byte- and word-ordering to differ, you're on your own.
+        If you want byte- and word-ordering to differ, you're on your own.
 
-    Using :ref:`string formatting` lets us use Python's C innards.
-    """
+        Using :ref:`string formatting` lets us use Python's C innards.
+        """
     from binascii import unhexlify
     # one (1) hex digit per four (4) bits
     width = val.bit_length()
