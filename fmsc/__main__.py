@@ -33,8 +33,6 @@ import fmsc
 from fmsc import upgrade
 import fmsc.utils as uf
 
-
-
 _logger = logging.getLogger(__file__)
 
 
@@ -66,7 +64,7 @@ def main():  # type: () -> None
                                 help='Avalon miner API port, default is %(default)s')
     upgrade_parser.add_argument('--file', '-F', type=str,
                                 help='Avalon miner firmware file path')
-    upgrade_parser.add_argument('--timeout', '-T', type=int, default=12*60,
+    upgrade_parser.add_argument('--timeout', '-T', type=int, default=12 * 60,
                                 help="Upgrade timeout. It's unit is seconds. default is %(default)s")
     upgrade_parser.set_defaults(func=upgrade_miner)
 

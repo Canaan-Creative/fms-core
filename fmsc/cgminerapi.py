@@ -31,7 +31,6 @@ from enum import Enum, IntEnum
 
 _logger = logging.getLogger(__file__)
 
-
 ERR_CODE_cancelled = 99999
 kDefaultPort = 4028
 
@@ -134,7 +133,7 @@ class CGMinerAPIResult(object):
                     matched = re.compile(r'.*\(\s*char\s+(\d+).*').match(str(e))
                     if matched:
                         sidx = min(max(uf.str2int(matched.group(1)) - peek_len, 0), len(unicode_response))
-                        eidx = min(sidx + 2*peek_len, len(unicode_response))
+                        eidx = min(sidx + 2 * peek_len, len(unicode_response))
                 _logger.exception(f"load api response failed. {sidx}:{eidx} <<<{unicode_response[sidx:eidx]}>>>")
         if self._response_dict is None:
             self._response_dict = {}
@@ -272,7 +271,7 @@ def request_cgminer_api_by_sock(
         use_json_command=True,
         error_info: typing.Optional[typing.List[typing.Union[str, dict]]] = None,
         auto_retry_if_refused_conn=True,
-        total_timeout=30*60):
+        total_timeout=30 * 60):
     """
     The response in return dict is a str, suggest to decode it as UTF-8
     """
@@ -281,7 +280,7 @@ def request_cgminer_api_by_sock(
         parameters = ''
     total_timeout_err = False
     try_times = 0
-    buffer_len = 8*1024  # 8 KiB
+    buffer_len = 8 * 1024  # 8 KiB
     buffer_list = bytearray()
     err_msgs = []
     success = False
@@ -343,13 +342,13 @@ def request_cgminer_api_by_sock(
                 is_refuse_conn = e.errno == errno.ECONNREFUSED
                 if is_refuse_conn and auto_retry_if_refused_conn:
                     unlimited_retry_count += 1
-                    if error_info is not None and len(error_info) >= 2\
+                    if error_info is not None and len(error_info) >= 2 \
                             and error_info[-2].get('socket_error_no') == errno.ECONNREFUSED:
                         del error_info[-1]
                     time.sleep(0.5)
             err_msgs.append(str(e))
             buffer_list = bytearray()
-            if not isinstance(e, ConnectionRefusedError)\
+            if not isinstance(e, ConnectionRefusedError) \
                     and not isinstance(e, ConnectionResetError) and not is_refuse_conn:
                 _logger.exception(
                     f"[{api_request_id}] [ip {ip} port {port}] "
@@ -400,7 +399,7 @@ async def aio_request_cgminer_api_by_sock(
         use_json_command=True,
         error_info=None,
         auto_retry_if_refused_conn=True,
-        total_timeout=30*60,
+        total_timeout=30 * 60,
         cancel_event: asyncio.Event = None):
     """
     The response in return dict is a str, suggest to decode it as UTF-8
@@ -425,7 +424,7 @@ async def aio_request_cgminer_api_by_sock(
         parameters = ''
     total_timeout_err = False
     try_times = 0
-    buffer_len = 8*1024  # 8 KiB
+    buffer_len = 8 * 1024  # 8 KiB
     buffer_list = bytearray()
     err_msgs = []
     success = False
@@ -620,7 +619,7 @@ class CGMinerAPI(object):
             port=kDefaultPort,
             first_timeout=default_first_timeout,
             retry=0,
-            total_timeout=30*60):
+            total_timeout=30 * 60):
         """
         return dict. "result" bool, if result is False, 'raw' is original APIResult
         """
@@ -635,7 +634,7 @@ class CGMinerAPI(object):
             port=kDefaultPort,
             first_timeout=default_first_timeout,
             retry=0,
-            total_timeout=30*60):
+            total_timeout=30 * 60):
         """
         return dict. "result" bool, if result is False, 'raw' is original APIResult
         """
@@ -675,13 +674,13 @@ class CGMinerAPI(object):
 
     @staticmethod
     def toggle_LED(ip, dev_id, mod_id, port=kDefaultPort, first_timeout=default_first_timeout, retry=0):
-        return request_cgminer_api_by_sock(ip, "ascset", "%s,led,%s"%(dev_id,mod_id), port, first_timeout, retry)
+        return request_cgminer_api_by_sock(ip, "ascset", "%s,led,%s" % (dev_id, mod_id), port, first_timeout, retry)
 
     @staticmethod
     def turn_LED(ip, dev_id, mod_id, turn_on, port=kDefaultPort, first_timeout=default_first_timeout, retry=0):
         # search 'strcasecmp(option, "led")' at cgminer driver
         return request_cgminer_api_by_sock(
-            ip, "ascset", "%s,led,%s-%s"%(dev_id,mod_id, 1 if turn_on else 0),
+            ip, "ascset", "%s,led,%s-%s" % (dev_id, mod_id, 1 if turn_on else 0),
             port, first_timeout, retry)
 
     @staticmethod
@@ -807,4 +806,3 @@ class CGMinerAPI(object):
         _logger.debug(param_str[:100])
         _logger.debug("ip: %s pd: %s" % (ip, str(payload_dict)))
         return param_str
-
