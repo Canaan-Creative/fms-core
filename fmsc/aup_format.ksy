@@ -32,7 +32,7 @@ types:
       - id: header_len
         type: u4
       - id: hw_list
-        type: comma_seperated_str_list
+        type: comma_separated_str_list
         size: 128
       - id: payload_len
         type: u4
@@ -64,7 +64,7 @@ types:
         type: fixed_32_str
         repeat: expr
         repeat-expr: sw_list_count
-  comma_seperated_str_list:
+  comma_separated_str_list:
     seq:
       - id: hw_str_list
         type: str
