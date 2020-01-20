@@ -672,18 +672,18 @@ class CGMinerAPI(object):
         return request_cgminer_api_by_sock(ip, "pools", "", port, first_timeout, retry)
 
     @staticmethod
-    def toggle_LED(ip, dev_id, mod_id, port=kDefaultPort, first_timeout=default_first_timeout, retry=0):
+    def toggle_led(ip, dev_id, mod_id, port=kDefaultPort, first_timeout=default_first_timeout, retry=0):
         return request_cgminer_api_by_sock(ip, "ascset", "%s,led,%s" % (dev_id, mod_id), port, first_timeout, retry)
 
     @staticmethod
-    def turn_LED(ip, dev_id, mod_id, turn_on, port=kDefaultPort, first_timeout=default_first_timeout, retry=0):
+    def turn_led(ip, dev_id, mod_id, turn_on, port=kDefaultPort, first_timeout=default_first_timeout, retry=0):
         # search 'strcasecmp(option, "led")' at cgminer driver
         return request_cgminer_api_by_sock(
             ip, "ascset", "%s,led,%s-%s" % (dev_id, mod_id, 1 if turn_on else 0),
             port, first_timeout, retry)
 
     @staticmethod
-    def query_A10_LED(ip, port=kDefaultPort, first_timeout=default_first_timeout, retry=0, error_info=None):
+    def query_a10_led(ip, port=kDefaultPort, first_timeout=default_first_timeout, retry=0, error_info=None):
         response = request_cgminer_api_by_sock(
             ip, "ascset", "0,led,0-255",
             port, first_timeout, retry, error_info=error_info)
@@ -750,7 +750,7 @@ class CGMinerAPI(object):
         param_str = CGMinerAPI._prepare_upgrade_param(
             api_version, file_size, ip, offset, payload, payload_len, uid, version)
         return request_cgminer_api_by_sock(
-            ip, "ascset", "0,upgrade," + param_str, port, first_timeout, retry)
+            ip, "ascset", "0,upgrade," + param_str, port, first_timeout, retry, use_json_command=use_json_command)
 
     @staticmethod
     async def aio_mm3_upgrade(ip, uid, api_version, version, file_size, offset, payload_len, payload,
@@ -761,7 +761,7 @@ class CGMinerAPI(object):
         param_str = CGMinerAPI._prepare_upgrade_param(
             api_version, file_size, ip, offset, payload, payload_len, uid, version)
         return await aio_request_cgminer_api_by_sock(
-            ip, "ascset", "0,upgrade," + param_str, port, first_timeout, retry)
+            ip, "ascset", "0,upgrade," + param_str, port, first_timeout, retry, use_json_command=use_json_command)
 
     @staticmethod
     def _prepare_upgrade_param(api_version, file_size, ip, offset, payload, payload_len, uid, version):
@@ -778,9 +778,9 @@ class CGMinerAPI(object):
         header_len = 30  # header bytes count
         payload_dict['header_len'] = header_len
         param.extend(uf.long_to_bytes(header_len, 1, endianness))
-        cmd_ID = random.randint(1, 65536 / 2)  # 2 bytes
-        payload_dict['cmd_ID'] = cmd_ID
-        param.extend(uf.long_to_bytes(cmd_ID, 2, endianness))
+        cmd_id = random.randint(1, 65536 / 2)  # 2 bytes
+        payload_dict['cmd_ID'] = cmd_id
+        param.extend(uf.long_to_bytes(cmd_id, 2, endianness))
         sub_cmd = 0x0  # always 0
         payload_dict['sub_cmd'] = sub_cmd
         param.extend(uf.long_to_bytes(sub_cmd, 1, endianness))

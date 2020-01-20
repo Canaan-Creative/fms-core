@@ -1,15 +1,16 @@
 # -*- coding: utf-8; -*-
 
-# Print iterations progress, copy from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
-def printProgressBar(iteration,
-                     total,
-                     prefix='',
-                     suffix='',
-                     decimals=1,
-                     length=100,
-                     fill='█',
-                     printEnd="\r"):
+
+def print_progress_bar(iteration,
+                       total,
+                       prefix='',
+                       suffix='',
+                       decimals=1,
+                       length=100,
+                       fill='█',
+                       print_end="\r"):
     """
+    Print iterations progress, copy from https://stackoverflow.com/questions/3173320/text-progress-bar-in-the-console
     Call in a loop to create terminal progress bar
     @params:
         iteration   - Required  : current iteration (Int)
@@ -22,9 +23,9 @@ def printProgressBar(iteration,
         printEnd    - Optional  : end character (e.g. "\r", "\r\n") (Str)
     """
     percent = ("{0:." + str(decimals) + "f}").format(100 * (iteration / float(total)))
-    filledLength = int(length * iteration // total)
-    bar = fill * filledLength + '-' * (length - filledLength)
-    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end=printEnd)
+    filled_length = int(length * iteration // total)
+    bar = fill * filled_length + '-' * (length - filled_length)
+    print('\r%s |%s| %s%% %s' % (prefix, bar, percent, suffix), end=print_end)
     # Print New Line on Complete
     if iteration == total:
         print()

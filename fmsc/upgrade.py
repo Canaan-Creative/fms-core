@@ -22,10 +22,10 @@ from .aupfile import AUPFile
 
 
 def upgrade_firmware(ip: str, port: int, firmware_file_path: str, timeout: int = 12*60):
-    from fmsc.cliprogressbar import printProgressBar
+    from fmsc.cliprogressbar import print_progress_bar
 
     def _on_progress(ratio: typing.Union[float, UpgradeResults], status: UpgradeStatus):
-        printProgressBar(ratio if isinstance(ratio, float) else 1.0, 1.0, suffix=f"{status}")
+        print_progress_bar(ratio if isinstance(ratio, float) else 1.0, 1.0, suffix=f"{status}")
 
     aup_file = AUPFile(firmware_file_path)
     aup_file_payload = aup_file.file_content_binary()
