@@ -36,22 +36,22 @@ kUpgradeErrUnexpectedOffsetRe = re.compile(
 
 
 class UpgradeResults(Enum):
-    success = 0,
-    already_upgraded = 1,
-    no_prev_ver = -1,
-    reboot_timeout = -2,
-    upgrade_timeout = -3,
-    unexpected_error = -4,
-    unexpected_final_ver = -5,
-    out_of_memory = -6,
-    mismatch_hwtype = -7,
-    mismatch_swtype = -8,
-    cancelled = -9,
-    api_ver_mismatch = -10,
-    invalid_header = -11,
-    file_size_mismatch = -12,
-    payload = -13,
-    aup = -14,
+    success = 0
+    already_upgraded = 1
+    no_prev_ver = -1
+    reboot_timeout = -2
+    upgrade_timeout = -3
+    unexpected_error = -4
+    unexpected_final_ver = -5
+    out_of_memory = -6
+    mismatch_hwtype = -7
+    mismatch_swtype = -8
+    cancelled = -9
+    api_ver_mismatch = -10
+    invalid_header = -11
+    file_size_mismatch = -12
+    payload = -13
+    aup = -14
 
     @classmethod
     def from_upgrade_err_code(cls, err_code: UpgradeErrCode):
@@ -94,12 +94,12 @@ upgrade_result_display = {
 
 
 class UpgradeStatus(Enum):
-    Prepare = 'prepare',
-    PreCheckVer = 'pre_check_ver',
-    TransferFirmware = 'transfer_firmware',
-    Reboot = 'reboot',
-    PostCheckVer = 'post_check_ver',
-    Finish = 'finish',
+    Prepare = 'prepare'
+    PreCheckVer = 'pre_check_ver'
+    TransferFirmware = 'transfer_firmware'
+    Reboot = 'reboot'
+    PostCheckVer = 'post_check_ver'
+    Finish = 'finish'
 
 
 class UpgradeProgressInfo(typing.NamedTuple):
